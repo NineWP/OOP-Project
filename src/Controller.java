@@ -1,11 +1,9 @@
-import java.net.URL;
-import java.util.ResourceBundle;
-
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Tab;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
@@ -13,8 +11,27 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebHistory;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
+import javafx.concurrent.Worker.State;
 
-public class Controller implements Initializable {
+public class Controller {
+
+    @FXML
+    private Button btBack;
+
+    @FXML
+    private Button btForward;
+
+    @FXML
+    private Button btLoadPage;
+
+    @FXML
+    private Button btRefreshPage;
+
+    @FXML
+    private Button btZoomIn;
+
+    @FXML
+    private Button btZoomOut;
 
     @FXML
     private TextField textField;
@@ -30,13 +47,23 @@ public class Controller implements Initializable {
 
     private WebHistory history;
 
-    @Override
-    public void initialize(URL arg0, ResourceBundle arg1) {
-        engine = webView.getEngine();
+    public Tab currentTab;
+
+    @FXML
+    public void initialize() {
+        webView.getEngine().locationProperty().addListener((ov, oldstr, newstr) ->{
+            textField.setText(newstr);
+        });
+        webView.getEngine().getLoadWorker().stateProperty().addListener((obs,oldvalue,newvalue) -> {
+            if(newvalue == State.SUCCEEDED){
+                currentTab.setText(webView.getEngine().getTitle());
+            }
+       }); 
+
         homePage = "www.google.com";
         textField.setText(homePage);
-        webZoom = 1;
         loadPage();
+        webZoom = 1;
 
         webView.setOnKeyPressed((key) ->{
             if (key.getCode() == KeyCode.F12) {
@@ -48,11 +75,27 @@ public class Controller implements Initializable {
 
     public void loadPage() {
         // engine.load("http://www.google.com");
-        engine.load("http://" + textField.getText());
+        //engine.load("http://" + textField.getText());
+        String URL = textField.getText();
+
+        if (!URL.contains(".")) {
+            webView.getEngine().load("https://www.google.com/search?q=" + URL);
+            return;
+        }
+        if (!URL.startsWith("http://") && !URL.startsWith("https://")) {
+            URL = "https://" + URL;
+        }
+
+        webView.getEngine().load(URL);
     }
 
+    @FXML
+    void addNewTab(ActionEvent event) {
+        currentTab.getTabPane().getSelectionModel().selectLast();
+    }    
+
     public void refreshPage() {
-        engine.reload();
+        webView.getEngine().reload();
     }
 
     public void zoomIn() {
@@ -76,17 +119,11 @@ public class Controller implements Initializable {
     }
 
     public void back() {
-        history = engine.getHistory();
-        ObservableList<WebHistory.Entry> entries = history.getEntries();
-        history.go(-1);
-        textField.setText(entries.get(history.getCurrentIndex()).getUrl());
+        webView.getEngine().getHistory().go(-1);
     }
 
     public void forward() {
-        history = engine.getHistory();
-        ObservableList<WebHistory.Entry> entries = history.getEntries();
-        history.go(1);
-        textField.setText(entries.get(history.getCurrentIndex()).getUrl());
+        webView.getEngine().getHistory().go(1);
     }
 
     public void showText(String title, Stage window, String text) {

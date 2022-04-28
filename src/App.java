@@ -7,10 +7,10 @@ import javafx.stage.Stage;
 public class App extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
-        Parent loader = FXMLLoader.load(getClass().getResource("screen.fxml"));
-        Scene scene = new Scene(loader);
-        primaryStage.setTitle("Project java Web Browser");
-        primaryStage.setScene(scene);
+        Parent root = FXMLLoader.load(getClass().getResource("TabBrowser.fxml"));
+        Scene secondScene = new Scene(root);
+        primaryStage.setTitle("Java Web Browser Project");
+        primaryStage.setScene(secondScene);
         primaryStage.show();
     }
     public static void main(String[] args) throws Exception {
